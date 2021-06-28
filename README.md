@@ -1,5 +1,4 @@
-# Список ссылок.
+# Links list.
+This application let to create links and render list of them. Also there's the system of click-tracking, information of them is rendered too.
 
-Данное приложение позволяет создать список ссылок и отображает его. Также реализована система отслеживания кликов, информация о которых также отображается в приложении.
-
-Реализовано на стеке: *JavaScript* / *Bootstrap*.
+Realaized on JavaScript / Bootstrap stack.
