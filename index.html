@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="/css/style.css">
+        <title>Ссылки и клик-трекер</title>
+    </head>
+    <body>
+        <div class="container-fluid application-container" id="app">
+            <!-- Новая ссылка -->
+            <div class="application-block">
+                <form action="">
+                    <h3 class="form-title">Новая ссылка</h3>
+                    <div class="name-block">
+                        <input class="form-control new-name-field" type="text" name="new-name-field" id="new-name-field" placeholder="Имя..." data-click-tracked>
+                    </div>
+                    <div class="url-and-add-block">
+                        <div class="new-url-field-block">
+                            <input class="form-control new-url-field" type="text" name="new-url-field" id="new-url-field" placeholder="Url-адрес..." data-click-tracked>
+                        </div>
+                        <button class="btn btn-success add-button" type="button" id="add-button" data-click-tracked>Создать ссылку</button>
+                    </div>
+                </form>
+            </div>
+            <!-- Список ссылок -->
+            <div class="application-block">
+                <h3 class="links-title">Ссылки</h3>
+                <ul class="container-fluid links">
+                </ul>
+            </div>
+        </div>
+    </body>
+
+    <!-- Логика приложения -->
+    <script>
+        let app = document.querySelector("#app");
+
+        let newNameField = app.querySelector(".new-name-field");
+        let newURLField = app.querySelector(".new-url-field");
+
+        let addButton = app.querySelector(".add-button");
+
+        let linksList = app.querySelector(".links");
+
+        
+        function addLink(event) {
+            let linkName = newNameField.value;
+            let href = newURLField.value;
+
+            if (!linkName && !href) return;
+
+            let newLinkCode = `
+                <li class="container-fluid link-container">
+                    <div class="alert alert-light link-wrapper" id="link-wrapper" data-click-tracked>
+                        <a class="alert-link" target="_blank" href="${href}" id="link" data-click-tracked>${linkName}</a>
+                    </div>
+                    <button class="btn btn-light" id="delete-button" data-click-tracked>Удалить</button>
+                </li>
+            `;
+
+            linksList.innerHTML += newLinkCode;
+
+            newNameField.value = "";
+            newURLField.value = "";
+        }
+
+        // добавить ссылку
+        addButton.addEventListener("click", addLink);
+        document.addEventListener("keydown", event => {
+            if (event.code !== "Enter" && event.code !== "NumpadEnter") return;
+            addLink(event);
+        });
+        
+        // удалить ссылку
+        linksList.addEventListener("click", event => {
+            if (event.target.tagName !== "BUTTON") return;
+
+            let currentLinkElement = event.target.closest("li");
+            currentLinkElement.remove();
+        });
+    </script>
+
+    <!-- Система отслеживания кликов -->
+    <script>
+        let clicksData = clickTracker(app);
+
+        function clickTracker(application) {
+            let clicksInfo = [];
+
+            // Заголовок к таблице
+            let tableTitle = document.createElement("h3");
+            tableTitle.classList.add(".table-title");
+            tableTitle.textContent = "Таблица кликов";
+            
+            application.append(tableTitle);
+
+            // Кнопка показа
+            let showButton = document.createElement("button");
+            showButton.type = "button";
+            showButton.classList.add("btn");
+            showButton.classList.add("btn-dark");
+            showButton.classList.add("table-button");
+            showButton.textContent = "Показать";
+
+            application.append(showButton);
+
+            // Отрисовка данных в таблицу
+            let table = document.createElement("table");
+            table.classList.add("table");
+            table.classList.add("table-hidden");
+                
+            let thead = document.createElement("thead");
+            thead.classList.add("thead-dark");
+            thead.innerHTML += `
+                <tr>
+                    <th>ID</th>
+                    <th>Текст</th>
+                    <th>Время</th>
+                    <th>Путь</th>
+                </tr>
+            `;
+
+            table.append(thead);
+
+            let tbody = document.createElement("tbody");
+            tbody.classList.add("table-striped");
+            
+            table.append(tbody);
+
+            application.append(table);
+
+            showButton.addEventListener("click", () => {
+                if (clicksInfo.length === 0) return;
+
+                let classForHidden = "table-hidden";
+                table.classList.toggle(classForHidden);
+
+                showButton.textContent = table.classList.contains(classForHidden) ? "Показать" : "Скрыть";
+            });
+
+            // Обработка информации о новом клике
+            application.addEventListener("mousedown", event => {
+                let desiredAttribute = "data-click-tracked";
+                if (!event.target.hasAttribute(desiredAttribute)) return;
+
+                let currentClickInfo = {};
+                
+                // извлечение и обработка информации
+                currentClickInfo.id = event.target.id;
+
+                let textValue = event.target.textContent;
+
+                let isDiv = event.target.tagName === "DIV";
+                textValue = textValue.length === 0 || isDiv ? "-" : textValue;
+
+                currentClickInfo.text = textValue;
+
+                currentClickInfo.time = formatData(new Date());
+
+                currentClickInfo.path = createHierarchicalPath(event.target);
+                
+                // отрисовка тела таблицы
+                let tableRow = document.createElement("tr");
+                tableRow.innerHTML += `
+                    <td>${currentClickInfo.id}</td>
+                    <td>${currentClickInfo.text}</td>
+                    <td>${currentClickInfo.time}</td>
+                    <td>${currentClickInfo.path}</td>
+                `;
+
+                tbody.append(tableRow);
+
+                clicksInfo.push(currentClickInfo);
+            });
+
+            return clicksInfo;
+        }
+
+
+        // Дополнительные функции
+
+        // работа с датой
+        function formatData(date) {
+            let year = `${date.getFullYear()}`;
+
+            let month = `${convertTimeComponent(date.getMonth() + 1)}`;
+
+            let day = `${convertTimeComponent(date.getDate())}`;
+
+            let hours = `${convertTimeComponent(date.getHours())}`;
+
+            let minutes = `${convertTimeComponent(date.getMinutes())}`;
+
+            let seconds = `${convertTimeComponent(date.getSeconds())}`;
+
+            let dateInDesiredFormat = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return dateInDesiredFormat;
+        }
+
+        function convertTimeComponent(component) {
+            if (typeof component !== "string") {
+                component = `${component}`;
+            }
+
+            return +component < 10 ? "0" + component : component;
+        }
+
+        // сформировать путь
+        function createHierarchicalPath(element) {
+            let stackForFormattedValues = [];
+            let currentElementDesiredFormat;
+            
+            // конвертировать данные об элементе, положить их в стек 
+            let currentElement = element;
+            while (currentElement !== document) {
+                currentElementDesiredFormat = "";
+                
+                let tag = currentElement.tagName.toLowerCase();
+                currentElementDesiredFormat += tag;
+
+                let id = currentElement.id;
+                currentElementDesiredFormat += (id !== "" ? `#${id}` : "");
+
+                let currentElementClasses = Array.from(currentElement.classList);
+                currentElementDesiredFormat += currentElementClasses.map(value => `.${value}`).join("");
+
+                stackForFormattedValues.push(currentElementDesiredFormat);
+
+                currentElement = currentElement.parentNode;
+            }
+            
+            
+            let path = "";
+
+            // извлечь данные из стека
+            let stackLength = stackForFormattedValues.length;
+
+            for (let i = 0; i < stackLength; i++) {
+                let element = stackForFormattedValues.pop();
+
+                path += element;
+                if (i < stackLength - 1) path += " => ";
+            }
+
+            return path;
+        }
+    </script>
+</html>
