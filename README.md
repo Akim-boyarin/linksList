@@ -1,4 +1,4 @@
 # Links list.
-This application let to create links and render list of them. Also there's the system of click-tracking, information of them is rendered too.
+This application let to create links and render list of them. Also there's the system of click-tracking, information from it is rendered too.
 
-Realaized on JavaScript / Bootstrap stack.
+Implemented in JavaScript / Bootstrap stack.
